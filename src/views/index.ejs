@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chaos Ops Console</title>
+
+  <style>
+    :root {
+      --bg: #040605;
+      --panel: #070b08;
+      --panel2: #060807;
+      --grid: rgba(68, 255, 120, 0.08);
+      --txt: rgba(190, 255, 214, 0.92);
+      --muted: rgba(190, 255, 214, 0.62);
+      --green: #3dff86;
+      --green2: #00ff62;
+      --warn: #ffd166;
+      --danger: #ff4d6d;
+      --shadow: rgba(0, 255, 98, 0.18);
+      --shadow2: rgba(0, 255, 98, 0.08);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: var(--mono);
+      color: var(--txt);
+      background:
+        radial-gradient(1100px 700px at 20% 10%, rgba(0, 255, 98, 0.10), transparent 60%),
+        radial-gradient(900px 600px at 90% 20%, rgba(61, 255, 134, 0.07), transparent 55%),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.50), rgba(0, 0, 0, 0.85)),
+        repeating-linear-gradient(0deg, transparent 0px, transparent 28px, rgba(61, 255, 134, 0.04) 29px),
+        repeating-linear-gradient(90deg, transparent 0px, transparent 52px, rgba(61, 255, 134, 0.03) 53px),
+        var(--bg);
+      min-height: 100vh;
+    }
+
+    .scanlines::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.00) 0px,
+        rgba(0, 0, 0, 0.00) 2px,
+        rgba(0, 0, 0, 0.05) 3px,
+        rgba(0, 0, 0, 0.05) 4px
+      );
+      mix-blend-mode: multiply;
+      opacity: 0.55;
+    }
+
+    .wrap {
+      max-width: 1250px;
+      margin: 0 auto;
+      padding: 22px 18px 44px;
+    }
+
+    .topbar {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid rgba(61, 255, 134, 0.22);
+      background: linear-gradient(180deg, rgba(7, 11, 8, 0.92), rgba(6, 8, 7, 0.86));
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.70) inset, 0 10px 40px rgba(0, 0, 0, 0.55);
+      border-radius: 14px;
+      padding: 14px 16px;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .brand .title {
+      font-size: 16px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .brand .subtitle {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .badges {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .badge {
+      border: 1px solid rgba(61, 255, 134, 0.22);
+      background: rgba(0, 0, 0, 0.40);
+      padding: 8px 10px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: rgba(190, 255, 214, 0.84);
+      box-shadow: 0 0 18px var(--shadow2);
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 99px;
+      background: rgba(190, 255, 214, 0.30);
+      box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.75) inset;
+    }
+
+    .dot.ok { background: var(--green2); box-shadow: 0 0 18px rgba(0, 255, 98, 0.55); }
+    .dot.bad { background: var(--danger); box-shadow: 0 0 18px rgba(255, 77, 109, 0.55); }
+    .dot.warn { background: var(--warn); box-shadow: 0 0 18px rgba(255, 209, 102, 0.35); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      border: 1px solid rgba(61, 255, 134, 0.18);
+      background: linear-gradient(180deg, rgba(7, 11, 8, 0.88), rgba(6, 8, 7, 0.76));
+      border-radius: 14px;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.70) inset, 0 10px 40px rgba(0, 0, 0, 0.55);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .panel::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(800px 500px at 15% 0%, rgba(61, 255, 134, 0.06), transparent 55%),
+        linear-gradient(180deg, rgba(61, 255, 134, 0.10), transparent 50%);
+      opacity: 0.8;
+    }
+
+    .panel > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .panelHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(61, 255, 134, 0.15);
+      background: rgba(0, 0, 0, 0.30);
+    }
+
+    .panelHeader h2 {
+      margin: 0;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.75);
+    }
+
+    .panelHeader .hint {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .terminal {
+      height: 440px;
+      padding: 14px;
+      overflow: auto;
+      line-height: 1.45;
+      font-size: 12.5px;
+      text-shadow: 0 0 14px rgba(0, 255, 98, 0.10);
+    }
+
+    .line { white-space: pre-wrap; word-break: break-word; }
+    .line.dim { color: rgba(190, 255, 214, 0.60); }
+    .line.ok { color: rgba(0, 255, 98, 0.90); }
+    .line.warn { color: rgba(255, 209, 102, 0.92); }
+    .line.bad { color: rgba(255, 77, 109, 0.95); }
+
+    .cursor {
+      display: inline-block;
+      width: 9px;
+      margin-left: 6px;
+      background: rgba(0, 255, 98, 0.85);
+      height: 14px;
+      vertical-align: -2px;
+      animation: blink 1s steps(1, end) infinite;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    .controls {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 520px) {
+      .row { grid-template-columns: 1fr; }
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(61, 255, 134, 0.16);
+      background: rgba(0, 0, 0, 0.35);
+      box-shadow: 0 0 24px var(--shadow2);
+    }
+
+    .field label {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.70);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .field input, .field select {
+      font-family: var(--mono);
+      font-size: 12.5px;
+      padding: 10px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(61, 255, 134, 0.22);
+      outline: none;
+      background: rgba(4, 6, 5, 0.90);
+      color: rgba(190, 255, 214, 0.92);
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.75) inset;
+    }
+
+    .field input::placeholder { color: rgba(190, 255, 214, 0.35); }
+
+    .btnGrid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn {
+      cursor: pointer;
+      border: 1px solid rgba(61, 255, 134, 0.24);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(9, 14, 10, 0.90), rgba(3, 5, 4, 0.92));
+      color: rgba(190, 255, 214, 0.92);
+      padding: 12px 12px;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      text-align: left;
+      box-shadow: 0 0 26px var(--shadow2);
+      position: relative;
+      overflow: hidden;
+      transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+      user-select: none;
+    }
+
+    .btn::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(600px 180px at 20% 0%, rgba(61, 255, 134, 0.20), transparent 55%);
+      opacity: 0.55;
+      pointer-events: none;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(61, 255, 134, 0.45);
+      box-shadow: 0 0 40px rgba(0, 255, 98, 0.14);
+    }
+
+    .btn:active { transform: translateY(0px) scale(0.99); }
+
+    .btn .k {
+      font-size: 11px;
+      color: rgba(190, 255, 214, 0.62);
+      letter-spacing: 0.08em;
+    }
+
+    .btn .t {
+      display: block;
+      margin-top: 4px;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.82);
+    }
+
+    .btn.danger {
+      border-color: rgba(255, 77, 109, 0.35);
+      box-shadow: 0 0 26px rgba(255, 77, 109, 0.10);
+    }
+
+    .btn.danger::before {
+      background: radial-gradient(600px 180px at 20% 0%, rgba(255, 77, 109, 0.22), transparent 55%);
+    }
+
+    .btn.warn {
+      border-color: rgba(255, 209, 102, 0.40);
+      box-shadow: 0 0 26px rgba(255, 209, 102, 0.10);
+    }
+
+    .btn.warn::before {
+      background: radial-gradient(600px 180px at 20% 0%, rgba(255, 209, 102, 0.20), transparent 55%);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .sectionTitle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.70);
+      margin: 4px 0 0;
+    }
+
+    .sectionTitle::after {
+      content: "";
+      height: 1px;
+      flex: 1;
+      background: linear-gradient(90deg, rgba(61, 255, 134, 0.25), transparent);
+      opacity: 0.85;
+    }
+
+    .footer {
+      margin-top: 12px;
+      color: rgba(190, 255, 214, 0.55);
+      font-size: 12px;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body class="scanlines">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="title">CHAOS OPS CONSOLE</div>
+        <div class="subtitle">Simulador de estresse e falhas para laboratório DevOps e Kubernetes</div>
+      </div>
+      <div class="badges">
+        <div class="badge"><span id="dotHealth" class="dot"></span><span id="healthText">HEALTH: ...</span></div>
+        <div class="badge"><span id="dotReady" class="dot"></span><span id="readyText">READY: ...</span></div>
+        <div class="badge"><span class="dot ok"></span><span id="hostText">HOST: ...</span></div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <section class="panel">
+        <div class="panelHeader">
+          <h2>Terminal de Operações</h2>
+          <div class="hint">Atalhos: [1] CPU [2] RAM [3] DISK [4] IO [5] NET [Q] DOENTE [W] UNREADY [E] SIGTERM</div>
+        </div>
+        <div id="terminal" class="terminal" aria-live="polite"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panelHeader">
+          <h2>Console de Ataque</h2>
+          <div class="hint"><span id="armHint">Aguardando config...</span></div>
+        </div>
+
+        <div class="controls">
+          <div class="row">
+            <div class="field">
+              <label>Token do Operador (Header X-Operator-Token)</label>
+              <input id="token" placeholder="defina OPERATOR_TOKEN no ambiente" autocomplete="off" />
+            </div>
+            <div class="field">
+              <label>Prefixo de variáveis (API /api/env)</label>
+              <input id="envPrefix" placeholder="APP_" value="APP_" />
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>Duração (segundos)</label>
+              <input id="seconds" type="number" min="1" max="600" value="30" />
+            </div>
+            <div class="field">
+              <label>Intensidade (preset)</label>
+              <select id="preset">
+                <option value="low">LOW</option>
+                <option value="med" selected>MED</option>
+                <option value="high">HIGH</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="sectionTitle">Ataques de Consumo</div>
+          <div class="btnGrid">
+            <button class="btn" id="btnCpu">
+              <div class="k">/attack/cpu</div>
+              <span class="t">CPU SURGE</span>
+            </button>
+            <button class="btn" id="btnMem">
+              <div class="k">/attack/memory</div>
+              <span class="t">RAM FLOOD</span>
+            </button>
+            <button class="btn" id="btnDisk">
+              <div class="k">/attack/disk</div>
+              <span class="t">DISK THRASH</span>
+            </button>
+            <button class="btn" id="btnIo">
+              <div class="k">/attack/io</div>
+              <span class="t">IO STORM</span>
+            </button>
+            <button class="btn" id="btnFork">
+              <div class="k">/attack/fork</div>
+              <span class="t">FORK SWARM</span>
+            </button>
+            <button class="btn" id="btnNet">
+              <div class="k">/attack/net</div>
+              <span class="t">NETWORK SPIKE</span>
+            </button>
+          </div>
+
+          <div class="sectionTitle">Falhas e Controles</div>
+          <div class="btnGrid">
+            <button class="btn warn" id="btnUnhealth">
+              <div class="k">/control/unhealth</div>
+              <span class="t">MARCAR DOENTE</span>
+            </button>
+            <button class="btn" id="btnHealth">
+              <div class="k">/control/health</div>
+              <span class="t">RECUPERAR HEALTH</span>
+            </button>
+            <button class="btn warn" id="btnUnready">
+              <div class="k">/control/unreadyfor</div>
+              <span class="t">FORÇAR UNREADY</span>
+            </button>
+            <button class="btn" id="btnReady">
+              <div class="k">/control/ready</div>
+              <span class="t">RECUPERAR READY</span>
+            </button>
+          </div>
+
+          <div class="sectionTitle">Desligamento</div>
+          <div class="btnGrid">
+            <button class="btn danger" id="btnSigterm">
+              <div class="k">/control/sigterm</div>
+              <span class="t">ENVIAR SIGTERM</span>
+            </button>
+            <button class="btn danger" id="btnExitFail">
+              <div class="k">/control/exit/fail</div>
+              <span class="t">CRASH (EXIT 1)</span>
+            </button>
+            <button class="btn danger" id="btnExitOk">
+              <div class="k">/control/exit/success</div>
+              <span class="t">GRACEFUL (EXIT 0)</span>
+            </button>
+            <button class="btn" id="btnEnv">
+              <div class="k">/api/env</div>
+              <span class="t">DUMP ENV</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="footer">Dica: use ConfigMap/Secret para OPERATOR_TOKEN e variáveis APP_. SAFE_MODE está ativado por padrão.</div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const term = $("terminal");
+
+    function ts() {
+      const d = new Date();
+      return d.toISOString().replace('T', ' ').slice(0, 19);
+    }
+
+    function line(text, cls = "dim") {
+      const el = document.createElement('div');
+      el.className = `line ${cls}`;
+      el.textContent = `[${ts()}] ${text}`;
+      term.appendChild(el);
+      term.scrollTop = term.scrollHeight;
+    }
+
+    function banner() {
+      line('Inicializando console...', 'dim');
+      line('Objetivo: estressar o próprio pod/container para validar liveness, readiness, HPA, PDB, graceful shutdown e triggers de emergência.', 'dim');
+      line('Atenção: este laboratório é auto contido. Não use em ambientes que você não controla.', 'warn');
+      line('---', 'dim');
+    }
+
+    function headers() {
+      const token = localStorage.getItem('opsToken') || '';
+      return token ? { 'X-Operator-Token': token, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+    }
+
+    function setButtonsEnabled(enabled) {
+      const ids = [
+        'btnCpu','btnMem','btnDisk','btnIo','btnFork','btnNet',
+        'btnUnhealth','btnHealth','btnUnready','btnReady',
+        'btnSigterm','btnExitFail','btnExitOk','btnEnv'
+      ];
+      ids.forEach(id => { const b = $(id); if (b) b.disabled = !enabled; });
+    }
+
+    function presetValues(preset, limits) {
+      // Valores autoajustáveis para ficar didático.
+      // SAFE_MODE limita o teto no backend.
+      if (preset === 'low') {
+        return {
+          cpuWorkers: 1,
+          vmWorkers: 1,
+          memMB: 256,
+          diskWorkers: 1,
+          ioWorkers: 1,
+          forkWorkers: 10,
+          netConcurrency: 40,
+        };
+      }
+      if (preset === 'high') {
+        return {
+          cpuWorkers: Math.min(6, limits?.maxCpuWorkers || 6),
+          vmWorkers: Math.min(3, limits?.maxVmWorkers || 3),
+          memMB: Math.min(1024, limits?.maxMemMB || 1024),
+          diskWorkers: Math.min(2, limits?.maxDiskWorkers || 2),
+          ioWorkers: Math.min(2, limits?.maxIoWorkers || 2),
+          forkWorkers: Math.min(50, limits?.maxForkWorkers || 50),
+          netConcurrency: Math.min(150, limits?.maxNetConcurrency || 150),
+        };
+      }
+      return {
+        cpuWorkers: 2,
+        vmWorkers: 1,
+        memMB: 512,
+        diskWorkers: 1,
+        ioWorkers: 1,
+        forkWorkers: 25,
+        netConcurrency: 80,
+      };
+    }
+
+    async function callPut(path, body) {
+      const r = await fetch(path, { method: 'PUT', headers: headers(), body: JSON.stringify(body || {}) });
+      const ct = r.headers.get('content-type') || '';
+      let payload;
+      if (ct.includes('application/json')) payload = await r.json();
+      else payload = { ok: r.ok, message: await r.text() };
+      if (!r.ok) {
+        const msg = payload?.error || payload?.message || 'Falha.';
+        line(`${path} -> ERROR: ${msg}`, 'bad');
+        return;
+      }
+      line(`${path} -> OK: ${payload?.message || 'executado'}`, 'ok');
+      if (payload?.job) {
+        line(`JOB ${payload.job.type} | endsAt=${new Date(payload.job.endsAt).toISOString()} | detail=${JSON.stringify(payload.job.detail)}`, 'dim');
+      }
+    }
+
+    async function refresh() {
+      try {
+        const r = await fetch('/api/status');
+        const data = await r.json();
+        if (!data.ok) return;
+
+        const h = data.probes.healthy;
+        const rd = data.probes.ready;
+        $("dotHealth").className = `dot ${h ? 'ok' : 'bad'}`;
+        $("dotReady").className = `dot ${rd ? 'ok' : 'warn'}`;
+        $("healthText").textContent = `HEALTH: ${h ? 'OK' : 'FAIL'}`;
+        $("readyText").textContent = `READY: ${rd ? 'OK' : 'FAIL'}`;
+        $("hostText").textContent = `HOST: ${data.runtime.hostname}`;
+      } catch (_) {
+        // silencioso
+      }
+    }
+
+    async function loadConfig() {
+      const r = await fetch('/api/config');
+      const cfg = await r.json();
+      const requiresToken = !!cfg.requiresToken;
+      const safeMode = !!cfg.safeMode;
+      const limits = cfg.limits || {};
+
+      const saved = localStorage.getItem('opsToken') || '';
+      $("token").value = saved;
+
+      if (requiresToken) {
+        $("armHint").textContent = 'ARMADO POR TOKEN: obrigatório para disparar ações.';
+        setButtonsEnabled(Boolean(saved));
+        if (!saved) line('OPERATOR_TOKEN está habilitado no servidor. Digite o token para armar os botões.', 'warn');
+      } else {
+        $("armHint").textContent = safeMode ? 'SAFE_MODE: ON (limites ativos)' : 'SAFE_MODE: OFF (sem limites)';
+        setButtonsEnabled(true);
+      }
+
+      // Ajusta duração sugerida ao limite
+      const maxSeconds = limits.maxSeconds || 45;
+      $("seconds").value = Math.min(Number($("seconds").value || 30), maxSeconds);
+
+      // Eventos
+      $("token").addEventListener('input', (e) => {
+        const v = (e.target.value || '').trim();
+        localStorage.setItem('opsToken', v);
+        if (requiresToken) setButtonsEnabled(Boolean(v));
+      });
+
+      const doAttack = async (type) => {
+        const seconds = Number($("seconds").value || 30);
+        const preset = $("preset").value;
+        const p = presetValues(preset, limits);
+        if (type === 'cpu') return callPut('/attack/cpu', { seconds, workers: p.cpuWorkers });
+        if (type === 'memory') return callPut('/attack/memory', { seconds, workers: p.vmWorkers, mb: p.memMB });
+        if (type === 'disk') return callPut('/attack/disk', { seconds, workers: p.diskWorkers });
+        if (type === 'io') return callPut('/attack/io', { seconds, workers: p.ioWorkers });
+        if (type === 'fork') return callPut('/attack/fork', { seconds, workers: p.forkWorkers });
+        if (type === 'net') return callPut('/attack/net', { seconds, concurrency: p.netConcurrency });
+      };
+
+      $("btnCpu").onclick = () => doAttack('cpu');
+      $("btnMem").onclick = () => doAttack('memory');
+      $("btnDisk").onclick = () => doAttack('disk');
+      $("btnIo").onclick = () => doAttack('io');
+      $("btnFork").onclick = () => doAttack('fork');
+      $("btnNet").onclick = () => doAttack('net');
+
+      $("btnUnhealth").onclick = () => callPut('/control/unhealth');
+      $("btnHealth").onclick = () => callPut('/control/health');
+      $("btnUnready").onclick = () => callPut(`/control/unreadyfor/${Number($("seconds").value || 30)}`);
+      $("btnReady").onclick = () => callPut('/control/ready');
+
+      $("btnSigterm").onclick = () => callPut('/control/sigterm');
+      $("btnExitFail").onclick = () => callPut('/control/exit/fail');
+      $("btnExitOk").onclick = () => callPut('/control/exit/success');
+
+      $("btnEnv").onclick = async () => {
+        const prefix = $("envPrefix").value || 'APP_';
+        try {
+          const rr = await fetch(`/api/env?prefix=${encodeURIComponent(prefix)}`);
+          const dd = await rr.json();
+          line(`ENV DUMP (prefix=${dd.prefix}, showSecrets=${dd.showSecrets})`, 'dim');
+          Object.entries(dd.values || {}).sort(([a],[b]) => a.localeCompare(b)).forEach(([k,v]) => {
+            const ok = v && v !== 'erro de configuração, valor não encontrado' && v !== '***masked***';
+            line(`${k}=${v}`, ok ? 'ok' : 'warn');
+          });
+        } catch (e) {
+          line('Falha ao consultar /api/env', 'bad');
+        }
+      };
+
+      // Atalhos de teclado
+      window.addEventListener('keydown', (e) => {
+        const key = (e.key || '').toLowerCase();
+        if (key === '1') $("btnCpu").click();
+        if (key === '2') $("btnMem").click();
+        if (key === '3') $("btnDisk").click();
+        if (key === '4') $("btnIo").click();
+        if (key === '5') $("btnNet").click();
+        if (key === 'q') $("btnUnhealth").click();
+        if (key === 'w') $("btnUnready").click();
+        if (key === 'e') $("btnSigterm").click();
+      });
+
+      line(`Config carregada. requiresToken=${requiresToken} safeMode=${safeMode} maxSeconds=${limits.maxSeconds}`, 'ok');
+    }
+
+    banner();
+    setButtonsEnabled(false);
+
+    loadConfig().catch(() => {
+      line('Falha ao carregar /api/config', 'bad');
+    });
+
+    refresh();
+    setInterval(refresh, 2000);
+  </script>
+</body>
+
+</html>
