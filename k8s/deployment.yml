@@ -1,0 +1,107 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chaos-ops-config
+data:
+  APP_NAME: "CHAOS OPS CONSOLE"
+  APP_VERSION: "2.0.0"
+  APP_MODE: "red-team-sim"
+  SAFE_MODE: "true"
+  SIGTERM_SECONDS: "20"
+
+  # Limites (SAFE_MODE)
+  MAX_SECONDS: "45"
+  MAX_CPU_WORKERS: "4"
+  MAX_MEM_MB: "1024"
+  MAX_VM_WORKERS: "2"
+  MAX_DISK_WORKERS: "2"
+  MAX_IO_WORKERS: "2"
+  MAX_FORK_WORKERS: "50"
+  MAX_NET_CONCURRENCY: "150"
+
+  # Exemplo de variáveis para você validar se ConfigMap/Secret foram aplicados
+  APP_TARGET_CLUSTER: "kind-lab"
+  APP_OPERATION: "chaos-testing"
+  APP_OPERATOR: "lucas"
+  APP_REGION: "sa-east-1"
+  APP_TEAM: "sre"
+  APP_INCIDENT_MODE: "training"
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: chaos-ops-secret
+type: Opaque
+stringData:
+  # Token que arma os botões (enviado no header X-Operator-Token)
+  OPERATOR_TOKEN: "lab123"
+
+  # Exemplos de "segredos" para treino
+  APP_PASSWORD: "super-secret"
+  APP_TOKEN: "token-abc-123"
+  APP_SECRET_KEY: "change-me"
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chaos-ops-console
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: chaos-ops-console
+  template:
+    metadata:
+      labels:
+        app: chaos-ops-console
+    spec:
+      containers:
+        - name: chaos-ops-console
+          image: rukasu/production-chaos-simulator:v2
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: chaos-ops-config
+            - secretRef:
+                name: chaos-ops-secret
+
+          # Se falhar, reinicie o container.
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+            timeoutSeconds: 2
+
+          # Se falhar, não envie requisições para este pod até ele estar pronto.
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 3000
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: chaos-ops-service
+spec:
+  selector:
+    app: chaos-ops-console
+  type: NodePort
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 30000
+      protocol: TCP
