@@ -96,6 +96,7 @@
       gap: 10px;
       flex-wrap: wrap;
       justify-content: flex-end;
+      align-items: center;
     }
 
     .badge {
@@ -122,6 +123,36 @@
     .dot.ok { background: var(--green2); box-shadow: 0 0 18px rgba(0, 255, 98, 0.55); }
     .dot.bad { background: var(--danger); box-shadow: 0 0 18px rgba(255, 77, 109, 0.55); }
     .dot.warn { background: var(--warn); box-shadow: 0 0 18px rgba(255, 209, 102, 0.35); }
+
+    /* Botão MANUAL dentro dos badges */
+    .manualBtn {
+      font-family: var(--mono);
+      cursor: pointer;
+      user-select: none;
+      transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+    }
+
+    .manualBtn:hover {
+      border-color: rgba(61, 255, 134, 0.45);
+      box-shadow: 0 0 36px rgba(0, 255, 98, 0.14);
+      background: rgba(0, 0, 0, 0.55);
+      transform: translateY(-1px);
+    }
+
+    .manualBtn:active {
+      transform: translateY(0px) scale(0.99);
+    }
+
+    .kbd {
+      margin-left: 8px;
+      padding: 2px 7px;
+      border-radius: 10px;
+      border: 1px solid rgba(61, 255, 134, 0.18);
+      background: rgba(0, 0, 0, 0.35);
+      color: rgba(190, 255, 214, 0.70);
+      font-size: 11px;
+      letter-spacing: 0.10em;
+    }
 
     .grid {
       display: grid;
@@ -362,6 +393,191 @@
       font-size: 12px;
       text-align: center;
     }
+
+    /* ===========================
+       MODAL DO MANUAL
+       =========================== */
+    .modalBackdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.70);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 9999;
+    }
+
+    .modalBackdrop.open { display: flex; }
+
+    .modal {
+      width: min(1050px, 96vw);
+      max-height: min(84vh, 860px);
+      overflow: hidden;
+      border-radius: 14px;
+      border: 1px solid rgba(61, 255, 134, 0.22);
+      background: linear-gradient(180deg, rgba(7, 11, 8, 0.94), rgba(6, 8, 7, 0.88));
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.70) inset, 0 20px 70px rgba(0, 0, 0, 0.75);
+      position: relative;
+    }
+
+    .modal::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(900px 520px at 12% 0%, rgba(61, 255, 134, 0.08), transparent 55%),
+        linear-gradient(180deg, rgba(61, 255, 134, 0.10), transparent 55%);
+      opacity: 0.9;
+    }
+
+    .modal > * { position: relative; z-index: 1; }
+
+    .modalHeader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(61, 255, 134, 0.15);
+      background: rgba(0, 0, 0, 0.32);
+    }
+
+    .modalHeader h3 {
+      margin: 0;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .modalHeader .right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: rgba(190, 255, 214, 0.60);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .closeBtn {
+      border: 1px solid rgba(61, 255, 134, 0.22);
+      background: rgba(0, 0, 0, 0.40);
+      color: rgba(190, 255, 214, 0.88);
+      padding: 8px 10px;
+      border-radius: 12px;
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+    }
+
+    .closeBtn:hover {
+      border-color: rgba(61, 255, 134, 0.45);
+      box-shadow: 0 0 36px rgba(0, 255, 98, 0.14);
+      background: rgba(0, 0, 0, 0.55);
+      transform: translateY(-1px);
+    }
+
+    .closeBtn:active { transform: translateY(0px) scale(0.99); }
+
+    .modalBody {
+      padding: 14px;
+      overflow: auto;
+      max-height: calc(min(84vh, 860px) - 54px);
+    }
+
+    .helpIntro {
+      margin: 0 0 12px 0;
+      color: rgba(190, 255, 214, 0.70);
+      font-size: 12.5px;
+      line-height: 1.45;
+    }
+
+    .helpGrid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 960px) {
+      .helpGrid { grid-template-columns: 1fr; }
+    }
+
+    .helpCard {
+      border-radius: 14px;
+      border: 1px solid rgba(61, 255, 134, 0.16);
+      background: rgba(0, 0, 0, 0.35);
+      box-shadow: 0 0 24px var(--shadow2);
+      padding: 12px;
+    }
+
+    .helpCard .row1 {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .helpCard .name {
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .helpCard .risk {
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(61, 255, 134, 0.16);
+      background: rgba(0, 0, 0, 0.35);
+      color: rgba(190, 255, 214, 0.72);
+      white-space: nowrap;
+    }
+
+    .helpCard .risk.info {
+      border-color: rgba(0, 255, 98, 0.28);
+      color: rgba(0, 255, 98, 0.92);
+    }
+
+    .helpCard .risk.warn {
+      border-color: rgba(255, 209, 102, 0.42);
+      color: rgba(255, 209, 102, 0.92);
+    }
+
+    .helpCard .risk.bad {
+      border-color: rgba(255, 77, 109, 0.46);
+      color: rgba(255, 77, 109, 0.95);
+    }
+
+    .helpCard .endpoint {
+      font-size: 12px;
+      color: rgba(190, 255, 214, 0.62);
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+
+    .helpCard .desc {
+      font-size: 12.5px;
+      line-height: 1.45;
+      color: rgba(190, 255, 214, 0.80);
+    }
+
+    .helpTips {
+      margin-top: 12px;
+      color: rgba(190, 255, 214, 0.62);
+      font-size: 12.5px;
+      line-height: 1.45;
+    }
   </style>
 </head>
 
@@ -372,7 +588,15 @@
         <div class="title">CHAOS OPS CONSOLE</div>
         <div class="subtitle">Simulador de estresse e falhas para laboratório DevOps e Kubernetes</div>
       </div>
+
       <div class="badges">
+        <!-- BOTÃO MANUAL (DISCRETO) À ESQUERDA DO HEALTH -->
+        <button class="badge manualBtn" id="manualBtn" title="Abrir manual de botões (atalho: ?)">
+          <span class="dot ok"></span>
+          <span>MANUAL ?</span>
+          <span class="kbd">?</span>
+        </button>
+
         <div class="badge"><span id="dotHealth" class="dot"></span><span id="healthText">HEALTH: ...</span></div>
         <div class="badge"><span id="dotReady" class="dot"></span><span id="readyText">READY: ...</span></div>
         <div class="badge"><span class="dot ok"></span><span id="hostText">HOST: ...</span></div>
@@ -383,7 +607,7 @@
       <section class="panel">
         <div class="panelHeader">
           <h2>Terminal de Operações</h2>
-          <div class="hint">Atalhos: [1] CPU [2] RAM [3] DISK [4] IO [5] NET [Q] DOENTE [W] UNREADY [E] SIGTERM</div>
+          <div class="hint">Atalhos: [1] CPU [2] RAM [3] DISK [4] IO [5] NET [Q] DOENTE [W] UNREADY [E] SIGTERM [ ? ] MANUAL</div>
         </div>
         <div id="terminal" class="terminal" aria-live="polite"></div>
       </section>
@@ -495,6 +719,33 @@
     <div class="footer">Dica: use ConfigMap/Secret para OPERATOR_TOKEN e variáveis APP_. SAFE_MODE está ativado por padrão.</div>
   </div>
 
+  <!-- MODAL DO MANUAL -->
+  <div class="modalBackdrop" id="manualBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Manual de botões">
+      <div class="modalHeader">
+        <h3>Manual de Botões</h3>
+        <div class="right">
+          <span class="kbd">ESC</span> fechar
+          <button class="closeBtn" id="manualCloseBtn">Fechar</button>
+        </div>
+      </div>
+      <div class="modalBody">
+        <p class="helpIntro">
+          Este painel descreve o que cada botão faz. Use em ambiente de laboratório. Algumas ações podem derrubar o processo, causar OOM, lotar disco ou degradar probes.
+        </p>
+
+        <div class="helpGrid" id="helpGrid"></div>
+
+        <div class="helpTips">
+          <b>Boas práticas:</b>
+          <br />• Ative <span class="kbd">OPERATOR_TOKEN</span> para evitar cliques acidentais.
+          <br />• Mantenha <span class="kbd">SAFE_MODE=true</span> quando estiver testando HPA, probes e graceful shutdown.
+          <br />• Use limites/requests no Deployment para observar OOMKill, throttling e autoscaling.
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     const $ = (id) => document.getElementById(id);
     const term = $("terminal");
@@ -534,7 +785,6 @@
     }
 
     function presetValues(preset, limits) {
-      // Valores autoajustáveis para ficar didático.
       // SAFE_MODE limita o teto no backend.
       if (preset === 'low') {
         return {
@@ -604,6 +854,146 @@
       }
     }
 
+    /* ===========================
+       MANUAL (MODAL)
+       =========================== */
+    const manualBackdrop = $("manualBackdrop");
+    const manualBtn = $("manualBtn");
+    const manualCloseBtn = $("manualCloseBtn");
+    const helpGrid = $("helpGrid");
+
+    const helpData = [
+      {
+        name: 'CPU SURGE',
+        endpoint: '/attack/cpu',
+        risk: 'warn',
+        desc: 'Gera carga intensa de CPU por alguns segundos. Útil para testar throttling, HPA e comportamento sob saturação.'
+      },
+      {
+        name: 'RAM FLOOD',
+        endpoint: '/attack/memory',
+        risk: 'bad',
+        desc: 'Consome memória rapidamente para testar OOMKill, limites de memória e estabilidade de nós/pods.'
+      },
+      {
+        name: 'DISK THRASH',
+        endpoint: '/attack/disk',
+        risk: 'warn',
+        desc: 'Escreve/gera pressão em disco. Útil para observar efeitos de disco cheio, latência e comportamento de volumes.'
+      },
+      {
+        name: 'IO STORM',
+        endpoint: '/attack/io',
+        risk: 'warn',
+        desc: 'Gera carga de I/O (leitura/escrita) para simular degradação. Ajuda a testar timeouts, backpressure e resiliência.'
+      },
+      {
+        name: 'FORK SWARM',
+        endpoint: '/attack/fork',
+        risk: 'bad',
+        desc: 'Cria muitos processos/threads em curto período. Pode degradar seriamente o container/node. Use com extremo cuidado.'
+      },
+      {
+        name: 'NETWORK SPIKE',
+        endpoint: '/attack/net',
+        risk: 'warn',
+        desc: 'Dispara burst de requests/saídas de rede (simulado). Bom para testar limites, latência e comportamento do app sob pico.'
+      },
+      {
+        name: 'MARCAR DOENTE',
+        endpoint: '/control/unhealth',
+        risk: 'warn',
+        desc: 'Força liveness/health a falhar. Útil para treinar reinício automático e políticas de recuperação.'
+      },
+      {
+        name: 'RECUPERAR HEALTH',
+        endpoint: '/control/health',
+        risk: 'info',
+        desc: 'Restaura o estado saudável do health/liveness para que probes voltem a passar.'
+      },
+      {
+        name: 'FORÇAR UNREADY',
+        endpoint: '/control/unreadyfor/:seconds',
+        risk: 'warn',
+        desc: 'Marca readiness como false por um período. Simula “tirar do serviço” sem matar o pod (treino de degradação controlada).'
+      },
+      {
+        name: 'RECUPERAR READY',
+        endpoint: '/control/ready',
+        risk: 'info',
+        desc: 'Restaura readiness para true, permitindo que o pod volte a receber tráfego.'
+      },
+      {
+        name: 'ENVIAR SIGTERM',
+        endpoint: '/control/sigterm',
+        risk: 'bad',
+        desc: 'Envia SIGTERM para o processo (desligamento gracioso). Ideal para testar preStop, terminationGracePeriod e shutdown hooks.'
+      },
+      {
+        name: 'CRASH (EXIT 1)',
+        endpoint: '/control/exit/fail',
+        risk: 'bad',
+        desc: 'Finaliza o processo com exit code 1 (falha). Deve provocar restart de acordo com a política do pod.'
+      },
+      {
+        name: 'GRACEFUL (EXIT 0)',
+        endpoint: '/control/exit/success',
+        risk: 'bad',
+        desc: 'Finaliza o processo com exit code 0 (sucesso). Também encerra o pod e permite estudar comportamento de rollout/restart.'
+      },
+      {
+        name: 'DUMP ENV',
+        endpoint: '/api/env?prefix=APP_',
+        risk: 'info',
+        desc: 'Mostra variáveis de ambiente e valida se os valores foram configurados. Quando falta, retorna “erro de configuração, valor não encontrado”.'
+      }
+    ];
+
+    function buildHelpCards() {
+      helpGrid.innerHTML = '';
+      const riskMap = { info: 'INFO', warn: 'CUIDADO', bad: 'ALTO RISCO' };
+
+      helpData.forEach((item) => {
+        const card = document.createElement('div');
+        card.className = 'helpCard';
+        card.innerHTML = `
+          <div class="row1">
+            <div class="name">${item.name}</div>
+            <div class="risk ${item.risk}">${riskMap[item.risk] || 'INFO'}</div>
+          </div>
+          <div class="endpoint">${item.endpoint}</div>
+          <div class="desc">${item.desc}</div>
+        `;
+        helpGrid.appendChild(card);
+      });
+    }
+
+    function openManual() {
+      manualBackdrop.classList.add('open');
+      manualBackdrop.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeManual() {
+      manualBackdrop.classList.remove('open');
+      manualBackdrop.setAttribute('aria-hidden', 'true');
+    }
+
+    function wireManual() {
+      manualBtn.addEventListener('click', openManual);
+      manualCloseBtn.addEventListener('click', closeManual);
+
+      manualBackdrop.addEventListener('click', (ev) => {
+        if (ev.target === manualBackdrop) closeManual();
+      });
+
+      window.addEventListener('keydown', (e) => {
+        const key = (e.key || '').toLowerCase();
+        // não atrapalha os atalhos atuais
+        if (key === '?') openManual();
+        if (key === 'escape') closeManual();
+      });
+    }
+
     async function loadConfig() {
       const r = await fetch('/api/config');
       const cfg = await r.json();
@@ -623,11 +1013,9 @@
         setButtonsEnabled(true);
       }
 
-      // Ajusta duração sugerida ao limite
       const maxSeconds = limits.maxSeconds || 45;
       $("seconds").value = Math.min(Number($("seconds").value || 30), maxSeconds);
 
-      // Eventos
       $("token").addEventListener('input', (e) => {
         const v = (e.target.value || '').trim();
         localStorage.setItem('opsToken', v);
@@ -677,7 +1065,7 @@
         }
       };
 
-      // Atalhos de teclado
+      // Atalhos de teclado (inclui manual em ?)
       window.addEventListener('keydown', (e) => {
         const key = (e.key || '').toLowerCase();
         if (key === '1') $("btnCpu").click();
@@ -694,6 +1082,8 @@
     }
 
     banner();
+    buildHelpCards();
+    wireManual();
     setButtonsEnabled(false);
 
     loadConfig().catch(() => {
